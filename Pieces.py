@@ -184,7 +184,7 @@ class Rook(PieceBase):
                         "up": range(current_row+1,9),
                         "down": range(current_row-1,0,-1)
                         }
-        ## left along current row
+        ## go as far as we can in each direction
         for direction, loop in loop_configs.items():
             for i in loop:
                 if direction == "left" or direction == "right":
@@ -210,3 +210,97 @@ class Rook(PieceBase):
         the list of available moves
         """
         self.threatens = self.available_moves
+
+
+class Bishop(PieceBase):
+
+    def __init__(self, colour):
+        super().__init__(colour, "Bishop")
+
+    def find_available_moves(self, board):
+        self.available_moves = []
+        starting_row = self.current_position[1]
+        starting_colnum = COLNAMES.index(self.current_position[0])
+        step_directions = [(1,1),(1,-1),(-1,1),(-1,-1)]
+        for direction in step_directions:
+            colnum = starting_colnum + direction[0]
+            row = starting_row + direction[1]
+            while colnum in range(8) and row in range(1,9):
+                pos = (COLNAMES[colnum],row)
+                if board.is_empty(pos):
+                    self.available_moves.append(pos)
+                elif board.piece_at(pos).colour != self.colour:
+                    self.available_moves.append(pos)
+                    break
+                else:
+                    break
+                colnum += direction[0]
+                row += direction[1]
+
+    def find_positions_threatened(self):
+        self.threatens = self.available_moves
+
+
+class Queen(PieceBase):
+
+    def __init__(self, colour):
+        super().__init__(colour, "Queen")
+
+    def find_available_moves(self, board):
+        self.available_moves = []
+        starting_row = self.current_position[1]
+        starting_colnum = COLNAMES.index(self.current_position[0])
+        step_directions = [
+            (1,0),(0,1),(-1,0),(0,-1),
+            (1,1),(1,-1),(-1,1),(-1,-1)
+        ]
+        for direction in step_directions:
+            colnum = starting_colnum + direction[0]
+            row = starting_row + direction[1]
+            while colnum in range(8) and row in range(1,9):
+                pos = (COLNAMES[colnum],row)
+                if board.is_empty(pos):
+                    self.available_moves.append(pos)
+                elif board.piece_at(pos).colour != self.colour:
+                    self.available_moves.append(pos)
+                    break
+                else:
+                    break
+                colnum += direction[0]
+                row += direction[1]
+
+    def find_positions_threatened(self):
+        self.threatens = self.available_moves
+
+
+class Knight(PieceBase):
+
+    def __init__(self, colour):
+        super().__init__(colour, "Knight")
+
+    def find_available_moves(self, board):
+        self.available_moves = []
+        starting_row = self.current_position[1]
+        starting_colnum = COLNAMES.index(self.current_position[0])
+        steps = [
+            (1,2),(2,1),(-1,2),(2,-1),
+            (1,-2),(-2,-1),(-2,1),(-1,-2)
+        ]
+        for step in steps:
+            colnum = starting_colnum + step[0]
+            row = starting_row + step[1]
+            if not (row in range(1,9) and colnum in range(8)):
+                continue
+            pos = (COLNAMES[colnum],row)
+            if board.is_empty(pos):
+                self.available_moves.append(pos)
+            elif board.piece_at(pos).colour != self.colour:
+                self.available_moves.append(pos)
+
+
+    def find_positions_threatened(self):
+        self.threatens = self.available_moves
+
+
+
+

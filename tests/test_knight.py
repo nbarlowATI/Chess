@@ -44,35 +44,32 @@ def test_knight_block():
     wn2 = Knight("WHITE")
     wn2.set_position(("B",4))
     b.pieces += [wn1, wn2]
-    wb1.find_available_moves(b)
-    wb2.find_available_moves(b)
-    assert(len(wb1.available_moves)==0)
-    assert(len(wb2.available_moves)==8)
-    assert(("H",8) in wb2.available_moves)
-    assert(("C",3) in wb2.available_moves)
-    assert(("A",3) in wb2.available_moves)
+    wn1.find_available_moves(b)
+    wn2.find_available_moves(b)
+    assert(len(wn1.available_moves)==2)
+    assert(("C",1) in wn1.available_moves)
+    assert(("C",3) in wn1.available_moves)
+    assert(len(wn2.available_moves)==5)
+    assert(("A",6) in wn2.available_moves)
+    assert(("C",2) in wn2.available_moves)
+    assert(("C",6) in wn2.available_moves)
+    assert(("D",3) in wn2.available_moves)
+    assert(("D",5) in wn2.available_moves)
 
 
-#def test_bishop_take():
-#    b = Board()
-#    wb = Bishop("WHITE")
-#    wb.set_position(("D",4))
-#    bb = Bishop("BLACK")
-#    bb.set_position(("B",2))
-#    b.pieces += [wb, bb]
-#    wb.find_available_moves(b)
-#    bb.find_available_moves(b)
-#    wmoves = wb.available_moves
-#    bmoves = bb.available_moves
-#    assert(len(wmoves)==12)
-#    assert(("A",1) not in wmoves)
-#    assert(("H",8) in wmoves)
-#    assert(("G",1) in wmoves)
-#    assert(("A",7) in wmoves)
-#    assert(len(bmoves)==5)
-#    assert(("D",4) in bmoves)
-#    assert(("C",1) in bmoves)
-#    assert(("C",3) in bmoves)
-#    assert(("A",1) in bmoves)
-#    assert(("A",3) in bmoves)
-#
+def test_knight_take():
+    b = Board()
+    wn = Knight("WHITE")
+    wn.set_position(("D",4))
+    bn = Knight("BLACK")
+    bn.set_position(("C",2))
+    b.pieces += [wn, bn]
+    wn.find_available_moves(b)
+    bn.find_available_moves(b)
+    wmoves = wn.available_moves
+    bmoves = bn.available_moves
+    assert(len(wmoves)==8)
+    assert(("C",2) in wmoves)
+    assert(len(bmoves)==6)
+    assert(("D",4) in bmoves)
+

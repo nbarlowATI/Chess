@@ -1,5 +1,4 @@
 """
-AI chess program.
 The Board class holds a list of PieceBases, all of which
 have a position.
 Positions are always represented as a tuple (col, row) with column
@@ -8,9 +7,17 @@ rows 1 and 2 (i.e. the bottom of the board as usually represented).
 
 """
 
+import copy
 import BoardPrinter
 
 COLNAMES = 'ABCDEFGH'
+PIECENAMES = {"King": "K",
+              "Queen": "Q",
+              "Bishop": "B",
+              "Rook": "R",
+              "Knight": "N",
+              "Pawn": "p"
+              }
 
 class PieceBase(object):
     """
@@ -23,23 +30,20 @@ class PieceBase(object):
         self.has_moved = False # useful for castling, and pawns.
         self.current_position = None
         self.available_moves = []
-
-    def taken(self):
-        self.active = False
-        self.current_position = None
+        self.threatens = []
 
     def __repr__(self):
         col = self.colour[0].lower()
-        piece_type = self.piece_type[0].lower()
+        piece_type = PIECENAMES[self.piece_type]
         return col+piece_type
 
     def set_position(self, pos):
         self.current_position = pos
 
-    def threatens(self):
-        return []
-
     def find_available_moves(self, board):
+        return []
+    
+    def find_positions_threatened(self):
         return []
 
 
@@ -51,6 +55,7 @@ class Board(object):
     """
     def __init__(self):
         self.pieces = []
+        self.snapshot = []
         pass
 
     def __repr__(self):
@@ -75,7 +80,7 @@ class Board(object):
         for p in self.pieces:
             if p.colour == colour:
                 continue
-            if pos in p.threatens():
+            if pos in p.threatens:
                 return True
 
 
@@ -87,3 +92,21 @@ class Board(object):
             if p.current_position == pos:
                 return p
         return None
+
+
+    def save_snapshot(self):
+        """
+        save the current state of the board 
+        """
+        self.snapshot = []
+        for p in self.pieces:
+            self.snapshot.append(copy.deepcopy(p))
+
+
+    def load_snapshot(self):
+        """
+        load the board from a snapshot
+        """
+        self.pieces = []
+        for p in self.snapshot:
+            self.pieces.append(copy.deepcopy(p))
