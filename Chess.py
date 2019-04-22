@@ -3,8 +3,8 @@ AI chess program.
 """
 import random
 from Board import Board, COLNAMES
-from Pieces import *
-
+from Pieces import Pawn, Bishop, Knight, Rook, Queen, King
+from Spinner import wait_symbol
 
 class Game(object):
     """
@@ -15,6 +15,21 @@ class Game(object):
         self.history = []
         self.snapshot = None
         self.reset()
+        self.players = {
+            "WHITE": None,
+            "BLACK": None
+        }
+        
+        
+    def init_players(self):
+        for colour in self.players.keys():
+            hum = input("Hello, human!  Would you like to play as {} (y/n)?"\
+                        .format(colour))
+            if hum == "y":
+                self.players[colour] = Player(colour, False)
+            else:
+                self.players[colour] = Player(colour, True)
+                
 
     def add_piece(self, piece, position):
         piece.current_position = position
@@ -120,7 +135,8 @@ class Game(object):
         if self.is_check(colour):
             print("Cannot move there - king would be in check")
             return False
-        
+        self.board.load_snapshot()
+        return True
 
     def move(self, start_pos, end_pos, trial_move=False):
         """
@@ -151,30 +167,67 @@ class Game(object):
             self.next_to_play = "WHITE"
 
 
+    def play(self):
+        self.init_players()
+        while not self.is_checkmate(self.next_to_play):
+            print("{} to play..".format(self.next_to_play))
+            if self.players[self.next_to_play].is_AI:
+                wait_symbol()
+                move = self.players[self.next_to_play].choose_move(self)
+                print("{}{} to {}{}".format(
+                    move[0][0],move[0][1],move[1][0],move[1][1]))
+            else:
+                self.players[self.next_to_play].input_move(self)
+        print(self.board)
+        print("Checkmate!! {} loses.".format(self.next_to_play))
+        
+
+
 
 class Player(object):
-    def __init__(self, colour, is_AI, game):
+    def __init__(self, colour, is_AI):
         self.colour = colour
         self.is_AI = is_AI
-        self.game = game
 
-    def move(self, start_pos, end_pos):
-        if self.game.is_legal_move(self.colour, start_pos, end_pos):
+    def move(self, game, start_pos, end_pos):
+        if game.is_legal_move(self.colour, start_pos, end_pos):
             moved_ok = game.move(start_pos, end_pos)
+            print("Moved_OK")
             return moved_ok
         else:
+            print("Didn't move")
             return False
 
-    def choose_move(self):
+    def choose_move(self, game):
         all_possible_moves = []
-        for p in self.game.board.pieces:
+        for p in game.board.pieces:
             if p.colour == self.colour:
                 for m in p.available_moves:
                     all_possible_moves.append((p.current_position,m))
         moved = False
         while not moved:
             print("Have {} moves to choose from".format(len(all_possible_moves)))
-            index = random.randint(0,len(all_possible_moves))
-            start,end = all_possible_moves[index]
-            moved = self.move(start,end)
-            
+            i = random.randint(0,len(all_possible_moves)-1)
+            print("Choosing move {}".format(i))
+            start,end = all_possible_moves[i]
+            moved = self.move(game, start,end)
+        return start, end
+
+    def input_move(self, game):
+        moved_ok = False
+        while not moved_ok:
+            print(game.board)
+            piece_to_move = input("Please select a {} piece to move:"\
+                                  .format(self.colour))
+            start_pos = (piece_to_move[0],
+                         int(piece_to_move[1]))
+            destination = input("Please select square to move to:")
+            end_pos = (destination[0],int(destination[1]))
+            moved_ok = self.move(game, start_pos, end_pos)
+            if not moved_ok:
+                print("Illegal move - please try again")
+
+
+if __name__ == "__main__":
+    g = Game()
+    g.play()
