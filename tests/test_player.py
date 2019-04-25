@@ -22,4 +22,4 @@ def test_player_illegal_move():
     assert(g.board.is_empty(("F",3)))
     assert(g.board.piece_at(("A",1)).colour=="WHITE")
     assert(g.board.piece_at(("A",1)).piece_type=="Rook")
-           
+    assert(g.next_to_play=="WHITE")
