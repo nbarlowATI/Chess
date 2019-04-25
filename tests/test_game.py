@@ -24,6 +24,7 @@ def test_black_pawn_move():
     g=Game()
     assert(not g.is_legal_move("BLACK",("A",7),("A",5)))
            
+
 def test_take():
     g = Game()
     g.move(("A",2),("A",7))

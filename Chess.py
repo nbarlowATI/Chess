@@ -129,11 +129,13 @@ class Game(object):
         p = self.board.piece_at(start_pos)
         if not end_pos in p.available_moves:
             print("Piece at {} cannot move to {}".format(start_pos,end_pos))
+            return False
         self.board.save_snapshot()
         ## try the move and see if we would be in check afterwards
         self.move(start_pos, end_pos, trial_move=True)
         if self.is_check(colour):
             print("Cannot move there - king would be in check")
+            self.board.load_snapshot()
             return False
         self.board.load_snapshot()
         return True
