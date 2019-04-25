@@ -105,6 +105,7 @@ class King(PieceBase):
 
 
     def find_available_moves(self, board):
+        self.available_moves = []
         adj_pos, castle_pos = self.find_potential_positions()
         # test whether we can move to adjacent square
         for pos in adj_pos:

@@ -208,10 +208,14 @@ class Player(object):
                     all_possible_moves.append((p.current_position,m))
         moved = False
         while not moved:
-            print("Have {} moves to choose from".format(len(all_possible_moves)))
+#            print("Have {} moves to choose from".format(len(all_possible_moves)))
             i = random.randint(0,len(all_possible_moves)-1)
-            print("Choosing move {}".format(i))
+#            print("Choosing move {}".format(i))
+
             start,end = all_possible_moves[i]
+            print(game.board)
+            print("Trying move {} to {}".format(start,end))
+
             moved = self.move(game, start,end)
         return start, end
 
