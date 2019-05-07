@@ -13,6 +13,7 @@ from Board import Board, COLNAMES, PieceBase
 class Pawn(PieceBase):
     def __init__(self, colour):
         super().__init__(colour, "Pawn")
+        self.value = 1
 
 
     def find_potential_positions(self):
@@ -75,6 +76,7 @@ class King(PieceBase):
     def __init__(self, colour):
         super().__init__(colour, "King")
         self.has_castled = False
+        self.value = 100
 
     def find_potential_positions(self):
         """
@@ -173,6 +175,7 @@ class King(PieceBase):
 class Rook(PieceBase):
     def __init__(self, colour):
         super().__init__(colour, "Rook")
+        self.value = 5
 
 
     def find_available_moves(self, board):
@@ -217,6 +220,7 @@ class Bishop(PieceBase):
 
     def __init__(self, colour):
         super().__init__(colour, "Bishop")
+        self.value = 3
 
     def find_available_moves(self, board):
         self.available_moves = []
@@ -246,6 +250,7 @@ class Queen(PieceBase):
 
     def __init__(self, colour):
         super().__init__(colour, "Queen")
+        self.value = 9
 
     def find_available_moves(self, board):
         self.available_moves = []
@@ -278,6 +283,7 @@ class Knight(PieceBase):
 
     def __init__(self, colour):
         super().__init__(colour, "Knight")
+        self.value = 3
 
     def find_available_moves(self, board):
         self.available_moves = []
@@ -301,7 +307,3 @@ class Knight(PieceBase):
 
     def find_positions_threatened(self):
         self.threatens = self.available_moves
-
-
-
-

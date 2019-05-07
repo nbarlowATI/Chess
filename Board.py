@@ -26,6 +26,7 @@ class PieceBase(object):
     def __init__(self, colour, piece_type):
         self.colour = colour
         self.piece_type = piece_type
+        self.value = 0
         self.active = True
         self.has_moved = False # useful for castling, and pawns.
         self.current_position = None
@@ -42,7 +43,7 @@ class PieceBase(object):
 
     def find_available_moves(self, board):
         return []
-    
+
     def find_positions_threatened(self):
         return []
 
@@ -96,7 +97,7 @@ class Board(object):
 
     def save_snapshot(self):
         """
-        save the current state of the board 
+        save the current state of the board
         """
         self.snapshot = []
         for p in self.pieces:
