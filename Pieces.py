@@ -63,7 +63,7 @@ class Pawn(PieceBase):
         pass
 
 
-    def find_positions_threatened(self):
+    def find_positions_threatened(self, board):
         """
         Return the squares that this pawn is
         currently threatening.
@@ -163,7 +163,7 @@ class King(PieceBase):
                 return False
 
 
-    def find_positions_threatened(self):
+    def find_positions_threatened(self, board):
         """
         Return the squares that this King is
         currently threatening, i.e. all adjacent squares.
@@ -180,6 +180,7 @@ class Rook(PieceBase):
 
     def find_available_moves(self, board):
         self.available_moves = []
+        self.threatens = []
         current_col = self.current_position[0]
         current_row = self.current_position[1]
         current_colnum = COLNAMES.index(current_col)
@@ -197,23 +198,27 @@ class Rook(PieceBase):
                     pos = (COLNAMES[current_colnum], i)
                 if board.is_empty(pos):
                     self.available_moves.append(pos)
+                    self.threatens.append(pos)
                 elif board.piece_at(pos).colour != self.colour:
                     ## opposite colour piece - can take,
                     ## but can't move beyond
+                    self.threatens.append(pos)
                     self.available_moves.append(pos)
                     break
                 else:
                     ## same colour piece - can't go there or beyond
+                    self.threatens.append(pos)
                     break
 
 
-    def find_positions_threatened(self):
+    def find_positions_threatened(self, board):
         """
         Return the squares that this rook is
         currently threatening.  In practice, this is the same as
         the list of available moves
         """
-        self.threatens = self.available_moves
+        if len(self.threatens)==0:
+            self.find_available_moves(board)
 
 
 class Bishop(PieceBase):
@@ -224,6 +229,7 @@ class Bishop(PieceBase):
 
     def find_available_moves(self, board):
         self.available_moves = []
+        self.threatens = []
         starting_row = self.current_position[1]
         starting_colnum = COLNAMES.index(self.current_position[0])
         step_directions = [(1,1),(1,-1),(-1,1),(-1,-1)]
@@ -233,17 +239,22 @@ class Bishop(PieceBase):
             while colnum in range(8) and row in range(1,9):
                 pos = (COLNAMES[colnum],row)
                 if board.is_empty(pos):
+                    self.threatens.append(pos)
                     self.available_moves.append(pos)
                 elif board.piece_at(pos).colour != self.colour:
                     self.available_moves.append(pos)
+                    self.threatens.append(pos)
                     break
                 else:
+                    self.threatens.append(pos)
                     break
                 colnum += direction[0]
                 row += direction[1]
 
-    def find_positions_threatened(self):
-        self.threatens = self.available_moves
+    def find_positions_threatened(self, board):
+        if len(self.threatens)==0:
+            self.find_available_moves(board)
+
 
 
 class Queen(PieceBase):
@@ -254,6 +265,7 @@ class Queen(PieceBase):
 
     def find_available_moves(self, board):
         self.available_moves = []
+        self.threatens = []
         starting_row = self.current_position[1]
         starting_colnum = COLNAMES.index(self.current_position[0])
         step_directions = [
@@ -267,16 +279,21 @@ class Queen(PieceBase):
                 pos = (COLNAMES[colnum],row)
                 if board.is_empty(pos):
                     self.available_moves.append(pos)
+                    self.threatens.append(pos)
                 elif board.piece_at(pos).colour != self.colour:
                     self.available_moves.append(pos)
+                    self.threatens.append(pos)
                     break
                 else:
+                    self.threatens.append(pos)
                     break
                 colnum += direction[0]
                 row += direction[1]
 
-    def find_positions_threatened(self):
-        self.threatens = self.available_moves
+    def find_positions_threatened(self, board):
+        if len(self.threatens)==0:
+            self.find_available_moves(board)
+
 
 
 class Knight(PieceBase):
@@ -287,6 +304,7 @@ class Knight(PieceBase):
 
     def find_available_moves(self, board):
         self.available_moves = []
+        self.threatens = []
         starting_row = self.current_position[1]
         starting_colnum = COLNAMES.index(self.current_position[0])
         steps = [
@@ -301,9 +319,13 @@ class Knight(PieceBase):
             pos = (COLNAMES[colnum],row)
             if board.is_empty(pos):
                 self.available_moves.append(pos)
+                self.threatens.append(pos)
             elif board.piece_at(pos).colour != self.colour:
                 self.available_moves.append(pos)
+                self.threatens.append(pos)
+            else:
+                self.threatens.append(pos)
 
-
-    def find_positions_threatened(self):
-        self.threatens = self.available_moves
+    def find_positions_threatened(self, board):
+        if len(self.threatens)==0:
+            self.find_available_moves(board)

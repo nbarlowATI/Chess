@@ -178,7 +178,7 @@ class Game(object):
     def update_all_pieces(self):
         for p in self.board.pieces:
             p.find_available_moves(self.board)
-            p.find_positions_threatened()
+            p.find_positions_threatened(self.board)
 
 
     def next_player_turn(self):
