@@ -19,8 +19,8 @@ class Game(object):
             "WHITE": None,
             "BLACK": None
         }
-        
-        
+
+
     def init_players(self):
         for colour in self.players.keys():
             hum = input("Hello, human!  Would you like to play as {} (y/n)?"\
@@ -29,7 +29,7 @@ class Game(object):
                 self.players[colour] = Player(colour, False)
             else:
                 self.players[colour] = Player(colour, True)
-                
+
 
     def add_piece(self, piece, position):
         piece.current_position = position
@@ -83,7 +83,7 @@ class Game(object):
 
     def is_checkmate(self, colour):
         """
-        See if the selected colour king is in check, and 
+        See if the selected colour king is in check, and
         if so, are there any moves that would get it out.
         """
         if self.next_to_play != colour:
@@ -109,11 +109,30 @@ class Game(object):
                 self.board.load_snapshot()
                 return False
             self.board.load_snapshot()
-                    
         ## we have been through all possible moves, and
         ## the king would be in check after all of them
         return True
-                
+
+    def potential_points_for_move(self, colour, start_pos, end_pos):
+        """
+        return a points value based on:
+          (value of any piece taken at end_pos)
+        - (value of this piece if threatened at end_pos)
+        + (value of this piece if threatened at start_pos)
+        """
+        points = 0
+        this_piece_value = self.board.piece_at(start_pos).value
+        if not self.board.is_empty(end_pos):
+            points += self.board.piece_at(end_pos).value
+        for p in self.board.pieces:
+            if p.colour == colour:
+                continue
+            if start_pos in p.threatens:
+                points += this_piece_value
+            if end_pos in p.threatens:
+                points -= this_piece_value
+        return points
+
 
     def is_legal_move(self, colour, start_pos, end_pos):
         """
@@ -152,14 +171,14 @@ class Game(object):
         self.update_all_pieces()
         p.has_moved = True
         if not trial_move:
-            self.next_player_turn()            
+            self.next_player_turn()
         return True
 
 
     def update_all_pieces(self):
         for p in self.board.pieces:
             p.find_available_moves(self.board)
-            p.find_positions_threatened()
+            p.find_positions_threatened(self.board)
 
 
     def next_player_turn(self):
@@ -182,7 +201,7 @@ class Game(object):
                 self.players[self.next_to_play].input_move(self)
         print(self.board)
         print("Checkmate!! {} loses.".format(self.next_to_play))
-        
+
 
 
 
@@ -207,16 +226,23 @@ class Player(object):
                 for m in p.available_moves:
                     all_possible_moves.append((p.current_position,m))
         moved = False
+        best_points = -999
+        best_move = None
         while not moved:
-#            print("Have {} moves to choose from".format(len(all_possible_moves)))
-            i = random.randint(0,len(all_possible_moves)-1)
-#            print("Choosing move {}".format(i))
-
-            start,end = all_possible_moves[i]
+            for move in all_possible_moves:
+                points = game.potential_points_for_move(self.colour,move[0],move[1])
+                if points > best_points or \
+                   (points == best_points and random.random() > 0.5):
+                    best_points = points
+                    best_move = move
+            start,end = best_move
             print(game.board)
             print("Trying move {} to {}".format(start,end))
 
             moved = self.move(game, start,end)
+            if not moved:
+                all_possible_moves.remove(best_move)
+                best_points = -999
         return start, end
 
     def input_move(self, game):
