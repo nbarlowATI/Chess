@@ -89,3 +89,18 @@ def test_pawn_threatens():
     assert(len(bp.threatens)==2)
     assert(("B",6) in bp.threatens)
     assert(("D",6) in bp.threatens)
+
+
+def test_pawn_end_of_board():
+    """
+    test that a pawn can't go off the end of the board.
+    """
+    b = Board()
+    wp = Pawn("WHITE")
+    wp.set_position(("A",8))
+    wp.find_available_moves(b)
+    assert(len(wp.available_moves)==0)
+    bp = Pawn("BLACK")
+    bp.set_position(("B",1))
+    bp.find_available_moves(b)
+    assert(len(bp.available_moves)==0)

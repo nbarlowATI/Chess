@@ -62,6 +62,12 @@ class Board(object):
     def __repr__(self):
         return BoardPrinter.print_board(self.pieces)
 
+    def in_bounds(self, pos):
+        """
+        Check the position is inside the board boundaries.
+        """
+        return pos[0] in COLNAMES and pos[1] in list(range(1,9))
+
 
     def is_empty(self, pos):
         """

@@ -50,9 +50,10 @@ class Pawn(PieceBase):
     def find_available_moves(self, board):
         self.available_moves = []
         one_ahead, two_ahead, takes = self.find_potential_positions()
-        if board.is_empty(one_ahead):
+        if board.is_empty(one_ahead) and board.in_bounds(one_ahead):
             self.available_moves.append(one_ahead)
-            if not self.has_moved and board.is_empty(two_ahead):
+            if not self.has_moved and board.is_empty(two_ahead) and \
+               board.in_bounds(two_ahead):
                 self.available_moves.append(two_ahead)
         for pt in takes:
             if not board.is_empty(pt) and \
