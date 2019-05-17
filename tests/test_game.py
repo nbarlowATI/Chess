@@ -50,6 +50,32 @@ def test_checkmate():
     assert(g.is_checkmate("BLACK"))
 
 
+
+def test_castling_king_side():
+    g=Game()
+    g.move(("G",1),("H",3))
+    g.move(("G",8),("H",6))
+    g.move(("E",2),("D",3))
+    g.move(("E",7),("D",6))
+    g.move(("F",1),("E",2))
+    g.move(("F",8),("E",7))
+    g.update_all_pieces()
+    assert(g.is_legal_move("WHITE",("E",1),("G",1)))
+    g.move(("E",1),("G",1))
+    assert(not g.board.is_empty(("G",1)))
+    assert(g.board.piece_at(("G",1)).piece_type == "King")
+    assert(not g.board.is_empty(("F",1)))
+    assert(g.board.piece_at(("F",1)).piece_type == "Rook")
+    ## Now have black do the same
+    assert(g.is_legal_move("BLACK",("E",8),("G",8)))
+    g.move(("E",8),("G",8))
+    assert(not g.board.is_empty(("G",8)))
+    assert(g.board.piece_at(("G",8)).piece_type == "King")
+    assert(not g.board.is_empty(("F",8)))
+    assert(g.board.piece_at(("F",8)).piece_type == "Rook")
+
+
+
 def test_points_take_pawn():
     g=Game()
     g.clear()

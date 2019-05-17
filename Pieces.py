@@ -162,7 +162,7 @@ class King(PieceBase):
                 return False
             if colnum != current_colnum and not board.is_empty((col,row)):
                 return False
-
+        return True
 
     def find_positions_threatened(self, board):
         """
