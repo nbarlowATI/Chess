@@ -278,15 +278,18 @@ class Player(object):
                     all_possible_moves.append((p.current_position,m))
         moved = False
         best_points = -999
-        best_move = None
+        best_moves = []
         while not moved:
             for move in all_possible_moves:
                 points = game.potential_points_for_move(self.colour,move[0],move[1])
-                if points > best_points or \
-                   (points == best_points and random.random() > 0.5):
+                if points > best_points:
                     best_points = points
-                    best_move = move
-            start,end = best_move
+                    best_moves = [move]
+                elif points == best_points:
+                    best_moves.append(move)
+            ## we now have a list best_moves which contains the one
+            ## or more top-scoring possible moves.  Pick one at random.
+            start,end = best_moves[random.randint(0,len(best_moves)-1)]
             print(game.board)
             print("Trying move {} to {}".format(start,end))
 
