@@ -81,4 +81,3 @@ def test_king_two_moves():
     moves = k.available_moves
     assert(len(moves)==8)
     assert(("E",7) not in moves)
-

@@ -159,17 +159,68 @@ class Game(object):
         self.board.load_snapshot()
         return True
 
+    def is_castling_move(self, start_pos, end_pos):
+        """
+        Return True if the piece at start_pos is a king, and
+        end_pos is more than one row away.
+        """
+
+        if self.board.is_empty(start_pos):
+            return False
+        if not self.board.piece_at(start_pos).piece_type == "King":
+            return False
+        start_colnum = COLNAMES.index(start_pos[0])
+        end_colnum = COLNAMES.index(end_pos[0])
+        is_castling = abs(start_colnum - end_colnum) > 1
+        return is_castling
+
+
+    def castle(self, start_pos, end_pos):
+        """
+        User castles by moving the king, the rook is then moved
+        automatically.
+        Assume we've already checked this is a legal move (i.e.
+        neither rook nor king have moved before, there's nothing
+        in the way).
+        """
+        if self.board.is_empty(start_pos):
+            return False
+        k = self.board.piece_at(start_pos)
+        k.current_position = end_pos
+        ## define a dict so we can get start+finish columns
+        ## for the rook, keyed on which column the king will
+        ## end up in.
+        castling_columns = { "G": ["H","F"],
+                             "C": ["A","D"] }
+        rook_start = (castling_columns[end_pos[0]][0],end_pos[1])
+        rook_end = (castling_columns[end_pos[0]][1],end_pos[1])
+        ## now move the rook.
+        if self.board.is_empty(rook_start):
+            return False
+        r = self.board.piece_at((rook_start))
+        r.current_position = (rook_end)
+        r.has_moved = True
+        k.has_moved = True
+        return True
+
+
+
     def move(self, start_pos, end_pos, trial_move=False):
         """
         move a piece on the board, taking the piece
         at the end position if applicable
         """
-        if not self.board.is_empty(end_pos):
-            self.board.pieces.remove(self.board.piece_at(end_pos))
-        p = self.board.piece_at(start_pos)
-        p.current_position = end_pos
+        if self.is_castling_move(start_pos, end_pos):
+            castled_ok = self.castle(start_pos, end_pos)
+            if not castled_ok:
+                return False
+        else:
+            if not self.board.is_empty(end_pos):
+                self.board.pieces.remove(self.board.piece_at(end_pos))
+            p = self.board.piece_at(start_pos)
+            p.current_position = end_pos
+            p.has_moved = True
         self.update_all_pieces()
-        p.has_moved = True
         if not trial_move:
             self.next_player_turn()
         return True
@@ -227,15 +278,18 @@ class Player(object):
                     all_possible_moves.append((p.current_position,m))
         moved = False
         best_points = -999
-        best_move = None
+        best_moves = []
         while not moved:
             for move in all_possible_moves:
                 points = game.potential_points_for_move(self.colour,move[0],move[1])
-                if points > best_points or \
-                   (points == best_points and random.random() > 0.5):
+                if points > best_points:
                     best_points = points
-                    best_move = move
-            start,end = best_move
+                    best_moves = [move]
+                elif points == best_points:
+                    best_moves.append(move)
+            ## we now have a list best_moves which contains the one
+            ## or more top-scoring possible moves.  Pick one at random.
+            start,end = best_moves[random.randint(0,len(best_moves)-1)]
             print(game.board)
             print("Trying move {} to {}".format(start,end))
 
