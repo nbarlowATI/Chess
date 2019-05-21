@@ -203,6 +203,31 @@ class Game(object):
         k.has_moved = True
         return True
 
+    def is_promotion_move(self, start_pos, end_pos):
+        """
+        Figure out if the requested move would promote a pawn.
+        """
+        if self.board.is_empty(start_pos):
+            return False
+        p = self.board.piece_at(start_pos)
+        if p.piece_type != "Pawn":
+            return False
+        return (p.colour=="WHITE" and end_pos[1]==8) \
+            or (p.colour=="BLACK" and end_pos[1]==1)
+
+
+    def promote(self, start_pos, end_pos):
+        """
+        Replace a pawn by a queen.
+        Assume we have already checked it is a legal move.
+        """
+        if self.board.is_empty(start_pos):
+            return False
+        pawn = self.board.piece_at(start_pos)
+        colour = pawn.colour
+        self.board.pieces.remove(pawn)
+        self.add_piece(Queen(colour), end_pos)
+        return True
 
 
     def move(self, start_pos, end_pos, trial_move=False):
@@ -213,6 +238,10 @@ class Game(object):
         if self.is_castling_move(start_pos, end_pos):
             castled_ok = self.castle(start_pos, end_pos)
             if not castled_ok:
+                return False
+        elif self.is_promotion_move(start_pos, end_pos):
+            promoted_ok = self.promote(start_pos, end_pos)
+            if not promoted_ok:
                 return False
         else:
             if not self.board.is_empty(end_pos):

@@ -124,35 +124,18 @@ def test_cant_castle_after_moving():
     assert(not g.is_legal_move("BLACK",("E",8),("G",8)))
 
 
-def test_points_take_pawn():
+def test_promotion():
     g=Game()
     g.clear()
-    g.add_piece(Pawn("BLACK"),("C",3))
-    g.add_piece(Queen("WHITE"),("C",1))
-    assert(len(g.board.pieces)==2)
+    g.add_piece(Pawn("WHITE"),("B",7))
+    g.add_piece(King("WHITE"),("E",1))
+    g.add_piece(Pawn("BLACK"),("G",2))
+    g.add_piece(King("BLACK"),("E",7))
     g.update_all_pieces()
-    points = g.potential_points_for_move("WHITE",("C",1),("C",3))
-    assert(points==1)
-
-
-def test_points_queen_escape():
-    g=Game()
-    g.clear()
-    g.add_piece(Pawn("BLACK"),("C",3))
-    g.add_piece(Queen("WHITE"),("B",2))
-    assert(len(g.board.pieces)==2)
+    assert(g.is_legal_move("WHITE",("B",7),("B",8)))
+    g.move(("B",7),("B",8))
+    assert(g.board.piece_at(("B",8)).piece_type=="Queen")
     g.update_all_pieces()
-    points = g.potential_points_for_move("WHITE",("B",2),("B",3))
-    assert(points==9)
-
-
-def test_points_rook_threaten():
-    g=Game()
-    g.clear()
-    g.add_piece(Pawn("WHITE"),("A",3))
-    g.add_piece(Rook("BLACK"),("B",8))
-    assert(len(g.board.pieces)==2)
-    g.next_to_play = "BLACK"
-    g.update_all_pieces()
-    points = g.potential_points_for_move("BLACK",("B",8),("B",4))
-    assert(points==-5)
+    assert(g.is_legal_move("BLACK",("G",2),("G",1)))
+    g.move(("G",2),("G",1))
+    assert(g.board.piece_at(("G",1)).piece_type=="Queen")
