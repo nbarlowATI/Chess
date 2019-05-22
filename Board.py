@@ -11,13 +11,25 @@ import copy
 import BoardPrinter
 
 COLNAMES = 'ABCDEFGH'
-PIECENAMES = {"King": "K",
-              "Queen": "Q",
-              "Bishop": "B",
-              "Rook": "R",
-              "Knight": "N",
-              "Pawn": "p"
-              }
+PIECENAMES = {
+    "BLACK": {
+        "King": u"\u265a",
+        "Queen": u"\u265b",
+        "Bishop": u"\u265d",
+        "Rook": u"\u265c",
+        "Knight": u"\u265e",
+        "Pawn": u"\u265f"
+    },
+    "WHITE": {
+        "King": u"\u2654",
+        "Queen": u"\u2655",
+        "Bishop": u"\u2657",
+        "Rook": u"\u2656",
+        "Knight": u"\u2658",
+        "Pawn": u"\u2659"
+        }
+    }
+
 
 class PieceBase(object):
     """
@@ -34,9 +46,7 @@ class PieceBase(object):
         self.threatens = []
 
     def __repr__(self):
-        col = self.colour[0].lower()
-        piece_type = PIECENAMES[self.piece_type]
-        return col+piece_type
+        return  PIECENAMES[self.colour][self.piece_type]
 
     def set_position(self, pos):
         self.current_position = pos

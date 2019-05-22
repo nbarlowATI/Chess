@@ -279,7 +279,7 @@ class Game(object):
                     move[0][0],move[0][1],move[1][0],move[1][1]))
             else:
                 self.players[self.next_to_play].input_move(self)
-        print(self.board)
+
         print("Checkmate!! {} loses.".format(self.next_to_play))
 
 
@@ -294,6 +294,7 @@ class Player(object):
         if game.is_legal_move(self.colour, start_pos, end_pos):
             moved_ok = game.move(start_pos, end_pos)
             print("Moved_OK")
+            print(game.board)
             return moved_ok
         else:
             print("Didn't move")
