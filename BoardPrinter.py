@@ -37,12 +37,12 @@ def find_index(col,row):
 
 def update_board(board, index, piece_str):
     """
-    Replace an empty square on the board string with a two-letter
+    Replace an empty square on the board string with a one-letter
     string representing colour and type of a piece.
     """
     new_string = board[:index]
     new_string += piece_str
-    new_string += board[index+2:]
+    new_string += board[index+1:]
     return new_string
 
 
