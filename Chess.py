@@ -5,6 +5,7 @@ import random
 from Board import Board, COLNAMES
 from Pieces import Pawn, Bishop, Knight, Rook, Queen, King
 from Spinner import wait_symbol
+from Player import Player
 
 class Game(object):
     """
@@ -159,6 +160,7 @@ class Game(object):
         self.board.load_snapshot()
         return True
 
+
     def is_castling_move(self, start_pos, end_pos):
         """
         Return True if the piece at start_pos is a king, and
@@ -282,66 +284,6 @@ class Game(object):
 
         print("Checkmate!! {} loses.".format(self.next_to_play))
 
-
-
-
-class Player(object):
-    def __init__(self, colour, is_AI):
-        self.colour = colour
-        self.is_AI = is_AI
-
-    def move(self, game, start_pos, end_pos):
-        if game.is_legal_move(self.colour, start_pos, end_pos):
-            moved_ok = game.move(start_pos, end_pos)
-            print("Moved_OK")
-            print(game.board)
-            return moved_ok
-        else:
-            print("Didn't move")
-            return False
-
-    def choose_move(self, game):
-        all_possible_moves = []
-        for p in game.board.pieces:
-            if p.colour == self.colour:
-                for m in p.available_moves:
-                    all_possible_moves.append((p.current_position,m))
-        moved = False
-        best_points = -999
-        best_moves = []
-        while not moved:
-            for move in all_possible_moves:
-                points = game.potential_points_for_move(self.colour,move[0],move[1])
-                if points > best_points:
-                    best_points = points
-                    best_moves = [move]
-                elif points == best_points:
-                    best_moves.append(move)
-            ## we now have a list best_moves which contains the one
-            ## or more top-scoring possible moves.  Pick one at random.
-            start,end = best_moves[random.randint(0,len(best_moves)-1)]
-            print(game.board)
-            print("Trying move {} to {}".format(start,end))
-
-            moved = self.move(game, start,end)
-            if not moved:
-                all_possible_moves.remove(best_move)
-                best_points = -999
-        return start, end
-
-    def input_move(self, game):
-        moved_ok = False
-        while not moved_ok:
-            print(game.board)
-            piece_to_move = input("Please select a {} piece to move:"\
-                                  .format(self.colour))
-            start_pos = (piece_to_move[0],
-                         int(piece_to_move[1]))
-            destination = input("Please select square to move to:")
-            end_pos = (destination[0],int(destination[1]))
-            moved_ok = self.move(game, start_pos, end_pos)
-            if not moved_ok:
-                print("Illegal move - please try again")
 
 
 if __name__ == "__main__":
