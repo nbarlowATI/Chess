@@ -35,16 +35,15 @@ class BestNextPointsPlayer(object):
     def choose_move(self, game):
         all_possible_moves = []
         for p in game.board.pieces:
-            print("Looking at piece at {}".format(p.current_position))
+            start_pos = p.current_position
             if p.colour == self.colour:
                 for m in p.available_moves:
-                    print(" Is {} legal? ".format(m))
-                    if game.is_legal_move(self.colour, p.current_position, m):
-                        all_possible_moves.append((p.current_position,m))
+                    if game.is_legal_move(self.colour, start_pos, m):
+                        all_possible_moves.append((start_pos,m))
         best_points = -999
         best_moves = []
+        print(game.board)
         for move in all_possible_moves:
-            print("Getting points for {}".format(move))
             points = game.potential_points_for_move(self.colour,move[0],move[1])
             if points > best_points:
                 best_points = points

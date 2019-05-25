@@ -37,7 +37,7 @@ class Player(object):
         moved_ok = False
         while not moved_ok:
             start_pos, end_pos =  self.AI_method.choose_move(game)
-            self.move(game, start_pos, end_pos)
+            moved_ok = self.move(game, start_pos, end_pos)
         return start_pos, end_pos
 
     def input_move(self, game):
