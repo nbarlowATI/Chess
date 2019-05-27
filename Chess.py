@@ -93,6 +93,7 @@ class Game(object):
             return False
         ## next player to play is in check.
         ## can they get out?
+        self.update_all_pieces()
         possible_moves = []
         for p in self.board.pieces:
             if p.colour == colour:
@@ -281,7 +282,7 @@ class Game(object):
                     move[0][0],move[0][1],move[1][0],move[1][1]))
             else:
                 self.players[self.next_to_play].input_move(self)
-
+        self.update_all_pieces()
         print("Checkmate!! {} loses.".format(self.next_to_play))
 
 

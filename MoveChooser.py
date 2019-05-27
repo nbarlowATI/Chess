@@ -44,7 +44,7 @@ class BestNextPointsPlayer(object):
         best_moves = []
         print(game.board)
         for move in all_possible_moves:
-            points = game.potential_points_for_move(self.colour,move[0],move[1])
+            points = self.potential_points_for_move(game, self.colour, move)
             if points > best_points:
                 best_points = points
                 best_moves = [move]
@@ -56,6 +56,27 @@ class BestNextPointsPlayer(object):
         print(game.board)
         print("Trying move {} to {}".format(start,end))
         return start, end
+
+    def potential_points_for_move(self, game, colour, move):
+        """
+        return a points value based on:
+          (value of any piece taken at end_pos)
+        - (value of this piece if threatened at end_pos)
+        + (value of this piece if threatened at start_pos)
+        """
+        points = 0
+        start_pos, end_pos = move
+        this_piece_value = game.board.piece_at(start_pos).value
+        if not game.board.is_empty(end_pos):
+            points += game.board.piece_at(end_pos).value
+        for p in game.board.pieces:
+            if p.colour == colour:
+                continue
+            if start_pos in p.threatens:
+                points += this_piece_value
+            if end_pos in p.threatens:
+                points -= this_piece_value
+        return points
 
 
 class MinimaxPlayer(object):
