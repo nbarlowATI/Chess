@@ -66,7 +66,7 @@ class Board(object):
     """
     def __init__(self):
         self.pieces = []
-        self.snapshot = []
+        self.snapshot = {}
         pass
 
     def __repr__(self):
@@ -111,19 +111,19 @@ class Board(object):
         return None
 
 
-    def save_snapshot(self):
+    def save_snapshot(self, identifier="TMP"):
         """
         save the current state of the board
         """
-        self.snapshot = []
+        self.snapshot[identifier] = []
         for p in self.pieces:
-            self.snapshot.append(copy.deepcopy(p))
+            self.snapshot[identifier].append(copy.deepcopy(p))
 
 
-    def load_snapshot(self):
+    def load_snapshot(self, identifier="TMP"):
         """
         load the board from a snapshot
         """
         self.pieces = []
-        for p in self.snapshot:
+        for p in self.snapshot[identifier]:
             self.pieces.append(copy.deepcopy(p))

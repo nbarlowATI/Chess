@@ -1,11 +1,14 @@
 """
 AI chess program.
 """
+import os
 import random
 from Board import Board, COLNAMES
 from Pieces import Pawn, Bishop, Knight, Rook, Queen, King
 from Spinner import wait_symbol
 from Player import Player
+
+DEFAULT_HISTORY_DIR = "/tmp/"
 
 class Game(object):
     """
@@ -20,7 +23,7 @@ class Game(object):
             "WHITE": None,
             "BLACK": None
         }
-
+        
 
     def init_players(self):
         for colour in self.players.keys():
@@ -64,6 +67,13 @@ class Game(object):
         self.update_all_pieces()
 
 
+    def write_history(self, filename):
+        """
+        Write out the sequence of moves to a file.
+        """
+        with open(filename, "w") as outfile:
+            for m in self.history:
+                outfile.write("{}\n".format(m))
 
     def is_check(self, colour):
         """
@@ -80,7 +90,6 @@ class Game(object):
         if self.board.is_threatened(king_pos, colour):
             return True
         return False
-
 
     def is_checkmate(self, colour):
         """
@@ -115,25 +124,39 @@ class Game(object):
         ## the king would be in check after all of them
         return True
 
-    def potential_points_for_move(self, colour, start_pos, end_pos):
+
+    def is_stalemate(self, colour):
         """
-        return a points value based on:
-          (value of any piece taken at end_pos)
-        - (value of this piece if threatened at end_pos)
-        + (value of this piece if threatened at start_pos)
+        See if the selected colour king is in check, and
+        if so, are there any moves that would get it out.
         """
-        points = 0
-        this_piece_value = self.board.piece_at(start_pos).value
-        if not self.board.is_empty(end_pos):
-            points += self.board.piece_at(end_pos).value
+        if self.next_to_play != colour:
+            return False
+        if self.is_check(colour):
+            return False
+        ## next player to play is NOT in check.
+        ## do they have any legal moves?
+        self.update_all_pieces()
+        possible_moves = []
         for p in self.board.pieces:
             if p.colour == colour:
-                continue
-            if start_pos in p.threatens:
-                points += this_piece_value
-            if end_pos in p.threatens:
-                points -= this_piece_value
-        return points
+                for move in p.available_moves:
+                    possible_moves.append((p.current_position, move))
+                    pass
+                pass
+            pass
+        if len(possible_moves) == 0:
+            return True
+        self.board.save_snapshot()
+        for m in possible_moves:
+            self.move(m[0], m[1], trial_move=True)
+            if not self.is_check(colour):
+                self.board.load_snapshot()
+                return False
+            self.board.load_snapshot()
+        ## we have been through all possible moves, and
+        ## the king would be in check after all of them
+        return True
 
 
     def is_legal_move(self, colour, start_pos, end_pos):
@@ -167,7 +190,6 @@ class Game(object):
         Return True if the piece at start_pos is a king, and
         end_pos is more than one row away.
         """
-
         if self.board.is_empty(start_pos):
             return False
         if not self.board.piece_at(start_pos).piece_type == "King":
@@ -205,6 +227,7 @@ class Game(object):
         r.has_moved = True
         k.has_moved = True
         return True
+
 
     def is_promotion_move(self, start_pos, end_pos):
         """
@@ -255,6 +278,7 @@ class Game(object):
         self.update_all_pieces()
         if not trial_move:
             self.next_player_turn()
+            self.history.append((start_pos, end_pos))
         return True
 
 
@@ -273,7 +297,8 @@ class Game(object):
 
     def play(self):
         self.init_players()
-        while not self.is_checkmate(self.next_to_play):
+        while not ( self.is_checkmate(self.next_to_play) or \
+                    self.is_stalemate(self.next_to_play) ):
             print("{} to play..".format(self.next_to_play))
             if self.players[self.next_to_play].is_AI:
                 wait_symbol()
@@ -284,7 +309,10 @@ class Game(object):
                 self.players[self.next_to_play].input_move(self)
         self.update_all_pieces()
         print("Checkmate!! {} loses.".format(self.next_to_play))
-
+        timestamp = datetime.now().isoformat().replace(":","-")
+        history_filename = os.path.join(DEFAULT_HISTORY_DIR,
+                                        "match_{}".format(timestamp))
+        self.write_history(history_filename)
 
 
 if __name__ == "__main__":
