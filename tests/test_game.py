@@ -49,7 +49,23 @@ def test_checkmate():
     assert(g.is_check("BLACK"))
     assert(g.is_checkmate("BLACK"))
 
-
+def test_no_checkmate_king_takes():
+    """
+    Problem seen when game declared checkmate
+    even though king could have taken the piece 
+    threatening it - check this is fixed.
+    """
+    g=Game()
+    g.clear()
+    g.add_piece(King("BLACK"),("H",8))
+    g.add_piece(King("WHITE"),("E",1))
+    g.add_piece(Pawn("WHITE"),("E",2))
+    g.add_piece(Pawn("WHITE"),("F",2))
+    g.add_piece(Queen("BLACK"),("D",5))
+    g.update_all_pieces()
+    g.next_player_turn()
+    g.move(("D",5),("D",1))
+    assert(not g.is_checkmate("WHITE"))
 
 def test_castling_king_side():
     g=Game()

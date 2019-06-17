@@ -1,16 +1,23 @@
 """
 AI chess program.
 """
+import os
 import random
+import copy
+from datetime import datetime
 from Board import Board, COLNAMES
 from Pieces import Pawn, Bishop, Knight, Rook, Queen, King
 from Spinner import wait_symbol
+from Player import Player
+
+
+DEFAULT_HISTORY_DIR = "/tmp/"
 
 class Game(object):
     """
     One game of chess.
     """
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.board = Board()
         self.history = []
         self.snapshot = None
@@ -19,7 +26,9 @@ class Game(object):
             "WHITE": None,
             "BLACK": None
         }
-
+        self.snapshots = {}
+        self.verbose = verbose
+        
 
     def init_players(self):
         for colour in self.players.keys():
@@ -34,6 +43,7 @@ class Game(object):
     def add_piece(self, piece, position):
         piece.current_position = position
         self.board.pieces.append(piece)
+
 
     def clear(self):
         """
@@ -60,9 +70,51 @@ class Game(object):
             for col in ["C","F"]:
                 self.add_piece(Bishop(colour),(col,row))
         self.next_to_play = "WHITE"
+        self.history = []
         self.update_all_pieces()
 
 
+    def get_history(self):
+        return self.history
+
+    def get_history_str(self):
+        history_str = ""
+        for move in self.history:
+            history_str += "{}{}{}{}".format(move[0][0],
+                                             move[0][1],
+                                             move[1][0],
+                                             move[1][1])
+        return history_str
+        
+    def save_snapshot(self):
+        """
+        save a snapshot of both the board and the history, and whose turn it is
+        """
+        snapshot = {
+            "next_to_play": self.next_to_play,
+            "history": copy.deepcopy(self.history)
+        }
+        self.board.save_snapshot(self.get_history_str())
+        self.snapshots[self.get_history_str()] = snapshot
+
+    def load_snapshot(self, history_str):
+        """
+        load a snapshot from the history str
+        """
+        if not history_str in self.snapshots.keys():
+            raise RuntimeError("No snapshot {} found".format(history_str))
+        self.next_to_play = self.snapshots[history_str]["next_to_play"]
+        self.history = self.snapshots[history_str]["history"]
+        self.board.load_snapshot(history_str)
+
+
+    def write_history(self, filename):
+        """
+        Write out the sequence of moves to a file.
+        """
+        with open(filename, "w") as outfile:
+            for m in self.history:
+                outfile.write("{}\n".format(m))
 
     def is_check(self, colour):
         """
@@ -80,7 +132,6 @@ class Game(object):
             return True
         return False
 
-
     def is_checkmate(self, colour):
         """
         See if the selected colour king is in check, and
@@ -92,6 +143,7 @@ class Game(object):
             return False
         ## next player to play is in check.
         ## can they get out?
+        self.update_all_pieces()
         possible_moves = []
         for p in self.board.pieces:
             if p.colour == colour:
@@ -104,8 +156,9 @@ class Game(object):
         for m in possible_moves:
             self.move(m[0], m[1], trial_move=True)
             if not self.is_check(colour):
-                print("Can escape check with move {} to {}"\
-                      .format(m[0], m[1]))
+                if self.verbose:
+                    print("Can escape check with move {} to {}"\
+                          .format(m[0], m[1]))
                 self.board.load_snapshot()
                 return False
             self.board.load_snapshot()
@@ -113,25 +166,39 @@ class Game(object):
         ## the king would be in check after all of them
         return True
 
-    def potential_points_for_move(self, colour, start_pos, end_pos):
+
+    def is_stalemate(self, colour):
         """
-        return a points value based on:
-          (value of any piece taken at end_pos)
-        - (value of this piece if threatened at end_pos)
-        + (value of this piece if threatened at start_pos)
+        See if the selected colour king is in check, and
+        if so, are there any moves that would get it out.
         """
-        points = 0
-        this_piece_value = self.board.piece_at(start_pos).value
-        if not self.board.is_empty(end_pos):
-            points += self.board.piece_at(end_pos).value
+        if self.next_to_play != colour:
+            return False
+        if self.is_check(colour):
+            return False
+        ## next player to play is NOT in check.
+        ## do they have any legal moves?
+        self.update_all_pieces()
+        possible_moves = []
         for p in self.board.pieces:
             if p.colour == colour:
-                continue
-            if start_pos in p.threatens:
-                points += this_piece_value
-            if end_pos in p.threatens:
-                points -= this_piece_value
-        return points
+                for move in p.available_moves:
+                    possible_moves.append((p.current_position, move))
+                    pass
+                pass
+            pass
+        if len(possible_moves) == 0:
+            return True
+        self.board.save_snapshot()
+        for m in possible_moves:
+            self.move(m[0], m[1], trial_move=True)
+            if not self.is_check(colour):
+                self.board.load_snapshot()
+                return False
+            self.board.load_snapshot()
+        ## we have been through all possible moves, and
+        ## the king would be in check after all of them
+        return True
 
 
     def is_legal_move(self, colour, start_pos, end_pos):
@@ -153,18 +220,20 @@ class Game(object):
         ## try the move and see if we would be in check afterwards
         self.move(start_pos, end_pos, trial_move=True)
         if self.is_check(colour):
-            print("Cannot move there - king would be in check")
+            if self.verbose:
+                print("Cannot move there - king would be in check")
             self.board.load_snapshot()
             return False
         self.board.load_snapshot()
+        self.update_all_pieces()
         return True
+
 
     def is_castling_move(self, start_pos, end_pos):
         """
         Return True if the piece at start_pos is a king, and
         end_pos is more than one row away.
         """
-
         if self.board.is_empty(start_pos):
             return False
         if not self.board.piece_at(start_pos).piece_type == "King":
@@ -202,6 +271,7 @@ class Game(object):
         r.has_moved = True
         k.has_moved = True
         return True
+
 
     def is_promotion_move(self, start_pos, end_pos):
         """
@@ -252,8 +322,30 @@ class Game(object):
         self.update_all_pieces()
         if not trial_move:
             self.next_player_turn()
+            self.history.append((start_pos, end_pos))
         return True
 
+
+    def get_all_possible_moves(self, colour):
+        """
+        Loop through all pieces of specified colour and return 
+        list of all legal moves.
+        """
+        self.update_all_pieces()
+        potential_moves = []
+        moves = []
+        for p in self.board.pieces:
+            if p.colour != colour:
+                continue
+            start_pos = p.current_position
+            for end_pos in p.available_moves:
+                potential_moves.append((start_pos, end_pos))
+        ## now loop through potential moves to see which are legal
+        for move in potential_moves:
+            if self.is_legal_move(colour, move[0],move[1]):
+                moves.append(move)
+        return moves
+        
 
     def update_all_pieces(self):
         for p in self.board.pieces:
@@ -270,7 +362,8 @@ class Game(object):
 
     def play(self):
         self.init_players()
-        while not self.is_checkmate(self.next_to_play):
+        while not ( self.is_checkmate(self.next_to_play) or \
+                    self.is_stalemate(self.next_to_play) ):
             print("{} to play..".format(self.next_to_play))
             if self.players[self.next_to_play].is_AI:
                 wait_symbol()
@@ -279,69 +372,12 @@ class Game(object):
                     move[0][0],move[0][1],move[1][0],move[1][1]))
             else:
                 self.players[self.next_to_play].input_move(self)
-
+        self.update_all_pieces()
         print("Checkmate!! {} loses.".format(self.next_to_play))
-
-
-
-
-class Player(object):
-    def __init__(self, colour, is_AI):
-        self.colour = colour
-        self.is_AI = is_AI
-
-    def move(self, game, start_pos, end_pos):
-        if game.is_legal_move(self.colour, start_pos, end_pos):
-            moved_ok = game.move(start_pos, end_pos)
-            print("Moved_OK")
-            print(game.board)
-            return moved_ok
-        else:
-            print("Didn't move")
-            return False
-
-    def choose_move(self, game):
-        all_possible_moves = []
-        for p in game.board.pieces:
-            if p.colour == self.colour:
-                for m in p.available_moves:
-                    all_possible_moves.append((p.current_position,m))
-        moved = False
-        best_points = -999
-        best_moves = []
-        while not moved:
-            for move in all_possible_moves:
-                points = game.potential_points_for_move(self.colour,move[0],move[1])
-                if points > best_points:
-                    best_points = points
-                    best_moves = [move]
-                elif points == best_points:
-                    best_moves.append(move)
-            ## we now have a list best_moves which contains the one
-            ## or more top-scoring possible moves.  Pick one at random.
-            start,end = best_moves[random.randint(0,len(best_moves)-1)]
-            print(game.board)
-            print("Trying move {} to {}".format(start,end))
-
-            moved = self.move(game, start,end)
-            if not moved:
-                all_possible_moves.remove(best_move)
-                best_points = -999
-        return start, end
-
-    def input_move(self, game):
-        moved_ok = False
-        while not moved_ok:
-            print(game.board)
-            piece_to_move = input("Please select a {} piece to move:"\
-                                  .format(self.colour))
-            start_pos = (piece_to_move[0],
-                         int(piece_to_move[1]))
-            destination = input("Please select square to move to:")
-            end_pos = (destination[0],int(destination[1]))
-            moved_ok = self.move(game, start_pos, end_pos)
-            if not moved_ok:
-                print("Illegal move - please try again")
+        timestamp = datetime.now().isoformat().replace(":","-")
+        history_filename = os.path.join(DEFAULT_HISTORY_DIR,
+                                        "match_{}".format(timestamp))
+        self.write_history(history_filename)
 
 
 if __name__ == "__main__":
