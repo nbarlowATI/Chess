@@ -140,7 +140,7 @@ class MinimaxPlayer(object):
                                                    move[0][1],
                                                    move[1][0],
                                                    move[1][1])
-                
+
                 value = self.minimax(game, next_depth, False, new_move_str)[0]
                 if value > best_value:
                     best_value = value
@@ -162,7 +162,7 @@ class MinimaxPlayer(object):
                     best_value = value
                     best_move_str = new_move_str
         return best_value, best_move_str
-        
+
 
     def alphabeta(self, game, depth, alpha, beta, maximizingPlayer, move_str):
         game.board.save_snapshot(move_str)
@@ -181,7 +181,7 @@ class MinimaxPlayer(object):
                                                    move[0][1],
                                                    move[1][0],
                                                    move[1][1])
-                
+
                 value = self.alphabeta(game, next_depth, alpha, beta, False, new_move_str)[0]
                 if value > best_value:
                     best_value = value
@@ -217,7 +217,7 @@ class MinimaxPlayer(object):
         """
         game_history = game.get_history_str()
         game.save_snapshot()
-        move_str = self.alphabeta(game, self.depth, 9999., 9999.,True, game_history)[1]
+        move_str = self.alphabeta(game, self.depth, -9999., 9999.,True, game_history)[1]
         game.load_snapshot(game_history)
         start = (move_str[-4],int(move_str[-3]))
         end = (move_str[-2], int(move_str[-1]))
