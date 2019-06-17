@@ -93,7 +93,7 @@ class MinimaxPlayer(object):
     """
     Use minimax algorithm to choose moves.
     """
-    def __init__(self, colour, depth=2):
+    def __init__(self, colour, depth=3):
         self.colour = colour
         self.depth = depth
         print("{} will use minimax algorithm to choose moves.".format(colour))
@@ -164,13 +164,60 @@ class MinimaxPlayer(object):
         return best_value, best_move_str
         
 
+    def alphabeta(self, game, depth, alpha, beta, maximizingPlayer, move_str):
+        game.board.save_snapshot(move_str)
+        if depth == 0:
+            return self.get_points_for_position(game), move_str
+        next_depth = depth - 1
+        best_move_str = None
+        if maximizingPlayer:
+            game.next_to_play = self.colour
+            best_value = -9999.
+            for move in game.get_all_possible_moves(self.colour):
+                game.board.load_snapshot(move_str)
+                game.move(move[0],move[1])
+                new_move_str = "{}{}{}{}{}".format(move_str,
+                                                   move[0][0],
+                                                   move[0][1],
+                                                   move[1][0],
+                                                   move[1][1])
+                
+                value = self.alphabeta(game, next_depth, alpha, beta, False, new_move_str)[0]
+                if value > best_value:
+                    best_value = value
+                    best_move_str = new_move_str
+                alpha = max(alpha, best_value)
+                if alpha >= beta:
+                    break
+            return best_value, best_move_str
+        else:
+            game.next_to_play = other_colour(self.colour)
+            best_value = 9999.
+            for move in game.get_all_possible_moves(other_colour(self.colour)):
+                game.board.load_snapshot(move_str)
+                game.move(move[0], move[1])
+                new_move_str = "{}{}{}{}{}".format(move_str,
+                                                   move[0][0],
+                                                   move[0][1],
+                                                   move[1][0],
+                                                   move[1][1])
+                value = self.alphabeta(game, next_depth, alpha, beta, True, new_move_str)[0]
+                if value < best_value:
+                    best_value = value
+                    best_move_str = new_move_str
+                beta = min(beta, best_value)
+                if beta < alpha:
+                    break
+        return best_value, best_move_str
+
+
     def choose_move(self, game):
         """
         Return start and end position based on minimax
         """
         game_history = game.get_history_str()
         game.save_snapshot()
-        move_str = self.minimax(game, self.depth, True, game_history)[1]
+        move_str = self.alphabeta(game, self.depth, 9999., 9999.,True, game_history)[1]
         game.load_snapshot(game_history)
         start = (move_str[-4],int(move_str[-3]))
         end = (move_str[-2], int(move_str[-1]))
