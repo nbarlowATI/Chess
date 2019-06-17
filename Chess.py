@@ -3,10 +3,13 @@ AI chess program.
 """
 import os
 import random
+import copy
+from datetime import datetime
 from Board import Board, COLNAMES
 from Pieces import Pawn, Bishop, Knight, Rook, Queen, King
 from Spinner import wait_symbol
 from Player import Player
+
 
 DEFAULT_HISTORY_DIR = "/tmp/"
 
@@ -14,7 +17,7 @@ class Game(object):
     """
     One game of chess.
     """
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.board = Board()
         self.history = []
         self.snapshot = None
@@ -23,6 +26,8 @@ class Game(object):
             "WHITE": None,
             "BLACK": None
         }
+        self.snapshots = {}
+        self.verbose = verbose
         
 
     def init_players(self):
@@ -38,6 +43,7 @@ class Game(object):
     def add_piece(self, piece, position):
         piece.current_position = position
         self.board.pieces.append(piece)
+
 
     def clear(self):
         """
@@ -64,7 +70,42 @@ class Game(object):
             for col in ["C","F"]:
                 self.add_piece(Bishop(colour),(col,row))
         self.next_to_play = "WHITE"
+        self.history = []
         self.update_all_pieces()
+
+
+    def get_history(self):
+        return self.history
+
+    def get_history_str(self):
+        history_str = ""
+        for move in self.history:
+            history_str += "{}{}{}{}".format(move[0][0],
+                                             move[0][1],
+                                             move[1][0],
+                                             move[1][1])
+        return history_str
+        
+    def save_snapshot(self):
+        """
+        save a snapshot of both the board and the history, and whose turn it is
+        """
+        snapshot = {
+            "next_to_play": self.next_to_play,
+            "history": copy.deepcopy(self.history)
+        }
+        self.board.save_snapshot(self.get_history_str())
+        self.snapshots[self.get_history_str()] = snapshot
+
+    def load_snapshot(self, history_str):
+        """
+        load a snapshot from the history str
+        """
+        if not history_str in self.snapshots.keys():
+            raise RuntimeError("No snapshot {} found".format(history_str))
+        self.next_to_play = self.snapshots[history_str]["next_to_play"]
+        self.history = self.snapshots[history_str]["history"]
+        self.board.load_snapshot(history_str)
 
 
     def write_history(self, filename):
@@ -115,8 +156,9 @@ class Game(object):
         for m in possible_moves:
             self.move(m[0], m[1], trial_move=True)
             if not self.is_check(colour):
-                print("Can escape check with move {} to {}"\
-                      .format(m[0], m[1]))
+                if self.verbose:
+                    print("Can escape check with move {} to {}"\
+                          .format(m[0], m[1]))
                 self.board.load_snapshot()
                 return False
             self.board.load_snapshot()
@@ -178,10 +220,12 @@ class Game(object):
         ## try the move and see if we would be in check afterwards
         self.move(start_pos, end_pos, trial_move=True)
         if self.is_check(colour):
-            print("Cannot move there - king would be in check")
+            if self.verbose:
+                print("Cannot move there - king would be in check")
             self.board.load_snapshot()
             return False
         self.board.load_snapshot()
+        self.update_all_pieces()
         return True
 
 
@@ -281,6 +325,27 @@ class Game(object):
             self.history.append((start_pos, end_pos))
         return True
 
+
+    def get_all_possible_moves(self, colour):
+        """
+        Loop through all pieces of specified colour and return 
+        list of all legal moves.
+        """
+        self.update_all_pieces()
+        potential_moves = []
+        moves = []
+        for p in self.board.pieces:
+            if p.colour != colour:
+                continue
+            start_pos = p.current_position
+            for end_pos in p.available_moves:
+                potential_moves.append((start_pos, end_pos))
+        ## now loop through potential moves to see which are legal
+        for move in potential_moves:
+            if self.is_legal_move(colour, move[0],move[1]):
+                moves.append(move)
+        return moves
+        
 
     def update_all_pieces(self):
         for p in self.board.pieces:
